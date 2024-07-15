@@ -1,17 +1,58 @@
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Main {
+    private static final int TESTS = 1000;
+
     public static void main(String[] args) {
-        // Press Opt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        OriginalLock lock = new OriginalLock();
+        List<Integer> AIndices = new ArrayList<>();
+        List<Integer> BIndices = new ArrayList<>();
 
-        // Press Ctrl+R or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
-
-            // Press Ctrl+D to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Cmd+F8.
-            System.out.println("i = " + i);
+        for (int i = 0; i < 7; i++) {
+            AIndices.add(i);
+            BIndices.add(i);
         }
+
+        while (AIndices.equals(BIndices)) {
+            Collections.shuffle(AIndices);
+            Collections.shuffle(BIndices);
+        }
+
+        Runnable task = () -> {
+            long startTime = System.currentTimeMillis();
+            ThreadID.assignID();
+
+            while(true) {
+                if (ThreadID.get() % 2 == 0)
+                    lock.lock(AIndices);
+
+                else
+                    lock.lock(BIndices);
+
+                long lockAcquiredTime = System.currentTimeMillis();
+                try {
+                    System.out.println("Thread " + ThreadID.get() + " is in the critical section");
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (ThreadID.get() % 2 == 0)
+                        lock.unlock(AIndices);
+
+                    else
+                        lock.unlock(BIndices);
+
+                    long lockReleasedTime = System.currentTimeMillis();
+                    System.out.println("Thread " + ThreadID.get() + " has left the critical section");
+                    System.out.println("Thread " + ThreadID.get() + " lock wait time: " + (lockAcquiredTime - startTime) + " ms");
+                    System.out.println("Thread " + ThreadID.get() + " critical section time: " + (lockReleasedTime - lockAcquiredTime) + " ms");
+                }
+            }
+        };
+
+        new Thread(task).start();
+        new Thread(task).start();
     }
 }

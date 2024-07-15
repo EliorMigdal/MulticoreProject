@@ -1,9 +1,14 @@
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class ThreadID {
-    private static AtomicInteger counter = new AtomicInteger(1);
+    private static final ThreadLocal<Integer> threadID = new ThreadLocal<>();
+    private static int nextID = 1;
 
-    public static int getID() {
-        return counter.getAndIncrement();
+    public static synchronized void assignID() {
+        if (threadID.get() == null) {
+            threadID.set(nextID++);
+        }
+    }
+
+    public static int get() {
+        return threadID.get();
     }
 }

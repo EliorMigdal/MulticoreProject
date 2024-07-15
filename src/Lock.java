@@ -1,4 +1,6 @@
+import java.util.List;
+
 public interface Lock {
-    void lock();
-    void unlock();
+    void lock(List<Integer> indices);
+    void unlock(List<Integer> indices);
 }
