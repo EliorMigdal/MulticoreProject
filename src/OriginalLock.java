@@ -120,13 +120,17 @@ public class OriginalLock implements Lock {
 
     private void waitForCSToBeReleased(List<Integer> indices) {
         boolean wasCSReleased = false;
+        boolean foundOwnedRegister;
 
         while (!wasCSReleased) {
-            for (int i = 0; i < M; i++)
-                if (!isRegisterFree(indices.get(i)) && !isSignaledWaiting(indices.get(i)))
-                    break;
+            foundOwnedRegister = false;
 
-            wasCSReleased = true;
+            for (int i = 0; i < M && !foundOwnedRegister; i++)
+                if (!isRegisterFree(indices.get(i)) && !isSignaledWaiting(indices.get(i)))
+                    foundOwnedRegister = true;
+
+            if (!foundOwnedRegister)
+                wasCSReleased = true;
         }
     }
 
@@ -139,15 +143,6 @@ public class OriginalLock implements Lock {
         while (!canIEnterCS(myGo)) {
             tryOwningEnoughRegisters(indices);
 
-            System.out.println("Thread " + ThreadID.get() + " owns " + countOwnedRegisters() + " registers.");
-            System.out.println("Registers state: [" + registers.get(indices.get(0)) + ", "
-                    + registers.get(indices.get(1)) + ", "
-                    + registers.get(indices.get(2)) + ", "
-                    + registers.get(indices.get(3)) + ", "
-                    + registers.get(indices.get(4)) + ", "
-                    + registers.get(indices.get(5)) + ", "
-                    + registers.get(indices.get(6)) + "]");
-
             if (didILose())
                 handleLoss(indices);
 
@@ -157,8 +152,25 @@ public class OriginalLock implements Lock {
 
     @Override
     public void unlock(List<Integer> indices) {
-        for (int i = 0; i < M; i++)
-            if (isSignaledWaiting(indices.get(i)) || doesProcessOwnRegister(indices.get(i), ThreadID.get()))
-                releaseRegister(indices.get(i));
+        if (countOwnedRegisters() < M - 2) {
+            for (int i = 0; i < M; i++)
+                if (isSignaledWaiting(indices.get(i)))
+                    releaseRegister(indices.get(i));
+        } else {
+            for (int j = 0; j < M; j++)
+                if (doesProcessOwnRegister(indices.get(j), ThreadID.get()))
+                    releaseRegister(indices.get(j));
+        }
+    }
+
+    private void printRegistersState(List<Integer> indices) {
+        System.out.println("Thread " + ThreadID.get() + " owns " + countOwnedRegisters() + " registers.");
+        System.out.println("Registers state: [" + registers.get(indices.get(0)) + ", "
+                + registers.get(indices.get(1)) + ", "
+                + registers.get(indices.get(2)) + ", "
+                + registers.get(indices.get(3)) + ", "
+                + registers.get(indices.get(4)) + ", "
+                + registers.get(indices.get(5)) + ", "
+                + registers.get(indices.get(6)) + "]");
     }
 }

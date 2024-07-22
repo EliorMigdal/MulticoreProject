@@ -1,5 +1,6 @@
 class MppRunner {
     public static void main(String[] args) {
-        Main.main(args);
+        for (int i = 1; i <= 10; i++)
+           Main.main(args);
     }
 }
