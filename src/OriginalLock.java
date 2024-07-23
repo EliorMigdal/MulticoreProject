@@ -1,7 +1,7 @@
 import java.util.Arrays;
 import java.util.List;
 
-public class OriginalLock implements Lock {
+public class OriginalLock {
     private final int M = 7;
     private final int WAITING = -1;
     private final int FREE = 0;
@@ -31,15 +31,18 @@ public class OriginalLock implements Lock {
     private void prioritizeWaitingProcess(List<Integer> indices) {
         int myCounter = 0;
 
-        while (myCounter < M && !isRegisterFree(indices.get(myCounter)))
+        while (myCounter < M && !isRegisterFree(indices.get(myCounter))) {
             myCounter++;
+        }
 
-        if (myCounter < M)
+        if (myCounter < M) {
             ownRegister(indices.get(myCounter), ThreadID.get());
+        }
 
         if (isOtherProcessWaiting(indices)) {
-            if (myCounter < M && doesProcessOwnRegister(indices.get(myCounter), ThreadID.get()))
-                releaseRegister(myCounter);
+            if (myCounter < M && doesProcessOwnRegister(indices.get(myCounter), ThreadID.get())) {
+                releaseRegister(indices.get(myCounter));
+            }
 
             while(isOtherProcessWaiting(indices));
         }
@@ -48,9 +51,11 @@ public class OriginalLock implements Lock {
     private boolean isOtherProcessWaiting(List<Integer> indices) {
         boolean isWaiting = false;
 
-        for (int i = 0; i < M && !isWaiting; i++)
-            if (isSignaledWaiting(indices.get(i)))
+        for (int i = 0; i < M && !isWaiting; i++) {
+            if (isSignaledWaiting(indices.get(i))) {
                 isWaiting = true;
+            }
+        }
 
         return isWaiting;
     }
@@ -125,16 +130,18 @@ public class OriginalLock implements Lock {
         while (!wasCSReleased) {
             foundOwnedRegister = false;
 
-            for (int i = 0; i < M && !foundOwnedRegister; i++)
-                if (!isRegisterFree(indices.get(i)) && !isSignaledWaiting(indices.get(i)))
+            for (int i = 0; i < M && !foundOwnedRegister; i++) {
+                if (!isRegisterFree(indices.get(i)) && !isSignaledWaiting(indices.get(i))) {
                     foundOwnedRegister = true;
+                }
+            }
 
-            if (!foundOwnedRegister)
+            if (!foundOwnedRegister) {
                 wasCSReleased = true;
+            }
         }
     }
 
-    @Override
     public void lock(List<Integer> indices) {
         ThreadID.assignID();
         boolean myGo = false;
@@ -143,23 +150,26 @@ public class OriginalLock implements Lock {
         while (!canIEnterCS(myGo)) {
             tryOwningEnoughRegisters(indices);
 
-            if (didILose())
+            if (didILose()) {
                 handleLoss(indices);
-
-            myGo = true;
+                myGo = true;
+            }
         }
     }
 
-    @Override
     public void unlock(List<Integer> indices) {
-        if (countOwnedRegisters() < M - 2) {
-            for (int i = 0; i < M; i++)
-                if (isSignaledWaiting(indices.get(i)))
+        if (countOwnedRegisters() == 0) {
+            for (int i = 0; i < M; i++) {
+                if (isSignaledWaiting(indices.get(i))) {
                     releaseRegister(indices.get(i));
+                }
+            }
         } else {
-            for (int j = 0; j < M; j++)
-                if (doesProcessOwnRegister(indices.get(j), ThreadID.get()))
+            for (int j = 0; j < M; j++) {
+                if (doesProcessOwnRegister(indices.get(j), ThreadID.get())) {
                     releaseRegister(indices.get(j));
+                }
+            }
         }
     }
 

@@ -131,11 +131,6 @@ public class RevisedLock {
         while (!canIEnterCS(myGo)) {
             tryOwningEnoughRegisters(indices);
 
-            System.out.println("Thread " + ThreadID.get() + " owns " + countOwnedRegisters() + " registers.");
-            System.out.println("Registers state: [" + registers.get(indices.get(0)) + ", "
-                    + registers.get(indices.get(1)) + ", "
-                    + registers.get(indices.get(2)) + "]");
-
             if (didILose())
                 handleLoss(indices);
 
@@ -151,5 +146,12 @@ public class RevisedLock {
             for (int j = 0; j < M; j++)
                 releaseRegister(indices.get(j));
         }
+    }
+
+    private void printRegistersState(List<Integer> indices) {
+        System.out.println("Thread " + ThreadID.get() + " owns " + countOwnedRegisters() + " registers.");
+        System.out.println("Registers state: [" + registers.get(indices.get(0)) + ", "
+                + registers.get(indices.get(1)) + ", "
+                + registers.get(indices.get(2)) + "]");
     }
 }
